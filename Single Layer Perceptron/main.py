@@ -10,7 +10,7 @@ from tkinter import messagebox
 
 
 # Handle dataset and create a map for the Features and Classes
-dataset = pd.read_csv('processed-penguins.csv')
+dataset = pd.read_csv(r'C:\Users\Norhan\Desktop\7th Semster\Neural\Task 1\DeepLearning-NeuralNetworksAssignments\Single Layer Perceptron\Preprocessing\processed-penguins.csv')
 col = list(dataset.columns.values)
 dataset = dataset[col[1:]+[col[0]]]
 Features = {1:'bill_length_mm',2:'bill_depth_mm',3:'flipper_length_mm',4:'gender',5:'body_mass_g'}
@@ -51,8 +51,30 @@ def SelectFeatures(f1, f2,train,test):
 # part of testing metrices
 # needing to conver y_true into into 1 and -1 np array
 def accuracy(y_true, y_predict):
-    acccuray= np.sum(y_true==y_predict)/ len(y_true)
-    return acccuray
+    fp = 0
+    fn = 0
+    tp = 0
+    tn = 0
+
+    for actual_value, predicted_value in zip(y_true, y_predict):
+        if predicted_value == actual_value:
+            if predicted_value == 1:
+                tp += 1
+            else:
+                tn += 1
+        else:
+            if predicted_value == 1:
+                fp += 1
+            else:
+                fn += 1
+
+    Confusion_matrix = [[tn, fp],[fn, tp]]
+
+    our_confusion_matrix = np.array(Confusion_matrix)
+    Confusion_matrix
+
+    acccuray= (tp + tn)/(tp+tn+fp+fn)
+    return acccuray,Confusion_matrix
 
 
 
@@ -166,8 +188,10 @@ def startPrediction():
     # testing and calculating accuracy
     y_converted = Y_test.to_numpy()
     y=np.array([1 if i==Species[1] else -1 for i in y_converted])
-    print("aacuracy: ", accuracy(y,predictions))
-    messagebox.showinfo("Accuracy", "Accuracy Is: " + str(accuracy(y, predictions)))
+    acc1,confusion_matrix= accuracy(y,predictions)
+    print("aacuracy: ", str(acc1))
+    print("Confusion Matrix: ", str(confusion_matrix))
+    messagebox.showinfo("Accuracy","Accuracy Is: " + str(acc1))
 
     # Plotting the graph
     xtrain = X_train.to_numpy()
@@ -177,6 +201,8 @@ def startPrediction():
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     plt.scatter(xtrain[:, 0], xtrain[:, 1], marker='o', c=y)
+
+
 
     x01 = np.amin(xtrain[:, 0])
     x02 = np.amax(xtrain[:, 0])
@@ -189,7 +215,7 @@ def startPrediction():
     ymin = np.amin(xtrain[:, 1])
     ymax = np.amax(xtrain[:, 1])
 
-    ax.set_ylim([ymin - 3, ymax + 3])
+    #ax.set_ylim([ymin - 3, ymax + 3])
 
     plt.show()
 
