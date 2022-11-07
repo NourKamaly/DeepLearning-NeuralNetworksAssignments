@@ -10,12 +10,11 @@ from tkinter import messagebox
 
 
 # Handle dataset and create a map for the Features and Classes
-dataset = pd.read_csv(r'C:\Users\Norhan\Desktop\7th Semster\Neural\Task 1\DeepLearning-NeuralNetworksAssignments\Single Layer Perceptron\Preprocessing\processed-penguins.csv')
+dataset = pd.read_csv('processed-penguins.csv')
 col = list(dataset.columns.values)
 dataset = dataset[col[1:]+[col[0]]]
 Features = {1:'bill_length_mm',2:'bill_depth_mm',3:'flipper_length_mm',4:'gender',5:'body_mass_g'}
 Species = {1:'Adelie',2:'Gentoo',3:'Chinstrap'}
-
 
 # Split the Data into 0.6 training and 0.4 testing (the required ratio)
 # Class1 and class2 are integers that map to its real class in Species map
@@ -78,6 +77,8 @@ def accuracy(y_true, y_predict):
 
 
 
+############################################GUI#########################################################################
+
 #creating form and put its dimension
 form = Tk()
 form.geometry("800x500")
@@ -123,7 +124,7 @@ C5.pack(anchor = W)
 
 #label for learning rate
 var = StringVar()
-label3 = Label( form, textvariable=var,)
+label3 = Label( form, textvariable=var)
 var.set("Enter Learning Rate(eta):")
 label3.pack(anchor = W )
 
@@ -150,7 +151,7 @@ C6.pack(anchor = W)
 
 
 def startPrediction():
-        # taking classes and features from user
+    # taking classes and features from user
     if(classesNumbers.get()==1):
         c1=1
         c2=2
@@ -178,7 +179,7 @@ def startPrediction():
     print("epochs: "+ str(numberOfEpochs.get()))
     print("bias: "+str(isBias.get()==1))
 
-    X_train, Y_train,X_test, Y_test= SelectFeatures(int(f1),int(2),train,test)
+    X_train, Y_train,X_test, Y_test= SelectFeatures(int(f1),int(f2),train,test)
 
     # creating perceptron object
     p = Perceptron(c1,c2,learningRate.get(),numberOfEpochs.get(),isBias.get()==1)
@@ -187,7 +188,8 @@ def startPrediction():
 
     # testing and calculating accuracy
     y_converted = Y_test.to_numpy()
-    y=np.array([1 if i==Species[1] else -1 for i in y_converted])
+    y=np.array([1 if i==Species[p.class1] else -1 for i in y_converted])
+
     acc1,confusion_matrix= accuracy(y,predictions)
     print("aacuracy: ", str(acc1))
     print("Confusion Matrix: ", str(confusion_matrix))
@@ -195,12 +197,11 @@ def startPrediction():
 
     # Plotting the graph
     xtrain = X_train.to_numpy()
-    y_converted = Y_train.to_numpy()
-    y = np.array([1 if i == Species[1] else -1 for i in y_converted])
+
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
-    plt.scatter(xtrain[:, 0], xtrain[:, 1], marker='o', c=y)
+    plt.scatter(xtrain[:, 0], xtrain[:, 1], marker='o',c=p.Y_encoded)
 
 
 
@@ -215,7 +216,7 @@ def startPrediction():
     ymin = np.amin(xtrain[:, 1])
     ymax = np.amax(xtrain[:, 1])
 
-    #ax.set_ylim([ymin - 3, ymax + 3])
+    ax.set_ylim([ymin - 3, ymax + 3])
 
     plt.show()
 
@@ -226,3 +227,4 @@ button.pack()
 
 #main loop
 form.mainloop()
+

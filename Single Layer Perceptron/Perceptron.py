@@ -15,6 +15,7 @@ class Perceptron:
         self.add_bias = add_bias
         self.class1 = class1
         self.class2 = class2
+        self.Y_encoded=None
 
     def fit(self, X, Y, Species):
         M_samples, N_features = X.shape
@@ -31,6 +32,7 @@ class Perceptron:
         # converting Y categorical values  to 1 and -1
         y_converted = Y.to_numpy()
         y = np.array([1 if i == Species[self.class1] else -1 for i in y_converted])
+        self.Y_encoded=y
 
         # Training loop
         x = X.to_numpy()
