@@ -6,22 +6,24 @@ import matplotlib.pyplot as plt
 
 class Perceptron:
 
-    def __init__(self, class1, class2, lr=0.01, epochs=1000, add_bias=True):
+    def __init__(self, class1, class2, lr=0.01, epochs=1000, add_bias=True, threshold=0.0):
         self.lr = lr
         self.epochs = epochs
-        self.activation_function = self.signum_f
+        self.activation_function = self.linear_function
         self.weights = None
         self.bias = 0
         self.add_bias = add_bias
         self.class1 = class1
         self.class2 = class2
+        self.threshold = threshold
+        self.Y_encoded = None
     
     def calculateMSE(self, trueLabels, predictedLabels,numOfTrainedSamples):
         mse = 0.5 * np.sum((trueLabels-predictedLabels)**2)
         mse /= numOfTrainedSamples
         return mse
         
-    def fit(self, X,Y,Species):
+    def fit(self, X, Y, Species):
         M_samples, N_features= X.shape
         
         #init weights
@@ -36,6 +38,7 @@ class Perceptron:
         # convert y to 1 and -1
         y_converted = Y.to_numpy()
         y = np.array([1 if i == Species[self.class1] else -1 for i in y_converted])
+        self.Y_encoded = y
         
         x= X.to_numpy()
         for _ in range(self.epochs):
@@ -44,12 +47,13 @@ class Perceptron:
                 if(self.add_bias):
                     linear_output+=self.bias
                 y_predict= self.activation_function(linear_output)
-                
-                update = self.lr * (y[indx]- y_predict)
+
+
+                update = self.lr * (y[indx] - y_predict)
                 self.weights += update * x_i
                 if(self.add_bias):
                     self.bias+=update
-            if (self.calculateMSE(y[indx], y_predict,M_samples) <= self.threshold):
+            if (self.calculateMSE(y, self.predict(x),M_samples) <= self.threshold):
                 break 
 
     # X is np array
@@ -57,8 +61,11 @@ class Perceptron:
         linear_out = np.dot(X, self.weights)
         if (self.add_bias):
             linear_out += self.bias
-        y_predicted = self.activation_function(linear_out)
+        y_predicted = self.signum_f(self.activation_function(linear_out))
         return y_predicted
 
+    def linear_function(self, X):
+        return X
+
     def signum_f(self, x):
-        return np.where(x >= 0, 1, -1)
+        return np.where(x >= 0.0, 1, -1)
