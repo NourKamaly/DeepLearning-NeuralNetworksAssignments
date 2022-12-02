@@ -7,7 +7,8 @@ from tkinter import messagebox
 from Perceptron import *
 
 dataset = pd.read_csv('processed-penguins.csv')
-
+train_data = pd.read_csv("mnist_train.csv")
+test_data = pd.read_csv("mnist_test.csv")
 
 def Train_Test_Dataframes():
     df_train = dataset.sample(frac=0.6, random_state=1)
@@ -22,7 +23,24 @@ def Train_Test_Dataframes():
     return X_train, Y_train, X_test, Y_test
 
 
-X_train, Y_train,X_test, Y_test = Train_Test_Dataframes()
+
+
+
+def Train_Test_Dataframe_Bonus():
+    X_train = (train_data.iloc[:, 1:].values).astype('float32')
+    y_train = train_data.iloc[:, 0].values.astype('int32')
+
+    X_test = (test_data.iloc[:, 1:].values).astype('float32')
+    y_test = test_data.iloc[:, 0].values.astype('int32')
+
+    X_train=X_train/255
+    X_test=X_test/255
+
+    y_train=pd.get_dummies(y_train)
+    y_test=pd.get_dummies(y_test)
+
+    return X_train, y_train, X_test, y_test
+
 
 
 def ConvertArray(a):
@@ -62,6 +80,21 @@ form = Tk()
 form.geometry("800x500")
 #
 
+# label for choose Dataset
+var = StringVar()
+label7 = Label(form, textvariable=var)
+var.set("Select Mandatory Or Bonus Dataset:")
+label7.pack(anchor=W)
+
+
+# radio button for mandatory or bonus
+InputDatasetChoice = IntVar()
+R3 = Radiobutton(form, text="Penguins", variable=InputDatasetChoice, value=1)
+R3.pack(anchor=W)
+
+R4 = Radiobutton(form, text="MNIST", variable=InputDatasetChoice, value=2)
+R4.pack(anchor=W)
+
 
 #label for Hidden Layers
 var = StringVar()
@@ -89,6 +122,36 @@ E2= Entry(form, bd =5,textvariable=InputNeurons)
 E2.pack(anchor=W)
 
 
+#label for epochs
+var = StringVar()
+label4 = Label( form, textvariable=var )
+var.set("Enter the number of epochs:")
+label4.pack(anchor = W )
+
+
+#textBox for epochs
+epochs = IntVar()
+E4= Entry(form, bd =5,textvariable=epochs)
+E4.pack(anchor=W)
+
+
+#label for activation function
+var = StringVar()
+label5 = Label( form, textvariable=var )
+var.set("Select One Activation Function:")
+label5.pack(anchor = W )
+
+
+
+#radio button for activation Function
+InputActivationFunction = IntVar()
+R1 = Radiobutton(form, text="Sigmoid", variable=InputActivationFunction, value=1)
+R1.pack( anchor = W )
+
+
+R2 = Radiobutton(form, text="Hyperbolic tangent", variable=InputActivationFunction, value=2)
+R2.pack( anchor = W )
+
 
 #label for learning rate
 var = StringVar()
@@ -103,19 +166,6 @@ E3 = Entry(form, bd =5,textvariable=LearningRate)
 E3.pack(anchor=W)
 
 
-#label for epochs
-var = StringVar()
-label4 = Label( form, textvariable=var )
-var.set("Enter the number of epochs:")
-label4.pack(anchor = W )
-
-
-#textBox for epochs
-epochs = IntVar()
-E4= Entry(form, bd =5,textvariable=epochs)
-E4.pack(anchor=W)
-
-
 #checkbox for bias
 isBias=IntVar()
 C1 = Checkbutton(form, text = "bias", variable = isBias,onvalue = 1, offvalue = 0)
@@ -123,39 +173,44 @@ C1.pack(anchor = W)
 
 
 
-#label for activation function
-var = StringVar()
-label5 = Label( form, textvariable=var )
-var.set("Select One Activation Function:")
-label5.pack(anchor = W )
 
 
 
-#radio button for classes
-InputActivationFunction = IntVar()
-R1 = Radiobutton(form, text="Sigmoid", variable=InputActivationFunction, value=1)
-R1.pack( anchor = W )
 
-
-R2 = Radiobutton(form, text="Hyperbolic tangent", variable=InputActivationFunction, value=2)
-R2.pack( anchor = W )
 def startPrediction():
-    neurons=[5]
-    for i in InputNeurons.get():
-        if(i.isnumeric()):
-            neurons.append(int(i))
-    neurons.append(3)
-    L = InputHiddenLayers.get()
-    L+=2
+    if(InputDatasetChoice.get()==1):
+        neurons = [5]
+        if (InputNeurons.get().find(',') == 1):
+            neurons.append(int(InputNeurons.get()))
+        else:
+            mylist = InputNeurons.get().split(',')
+            for i in mylist:
+                neurons.append(int(i))
+        neurons.append(3)
+        X_train, Y_train, X_test, Y_test = Train_Test_Dataframes()
 
-
-    activationFunction=""
-    if(InputActivationFunction.get()==1):
-        activationFunction="sigmoid"
     else:
-        activationFunction="tanh"
+        neurons = [784]
+        if(InputNeurons.get().find(',')==1):
+            neurons.append(int(InputNeurons.get()))
+        else:
+            mylist = InputNeurons.get().split(',')
+            for i in mylist:
+                neurons.append(int(i))
 
+        neurons.append(10)
+        X_train, Y_train, X_test, Y_test = Train_Test_Dataframe_Bonus()
+        X_train = pd.DataFrame(X_train)
+        X_test = pd.DataFrame(X_test)
 
+    L = InputHiddenLayers.get()
+    L += 2
+
+    activationFunction = ""
+    if (InputActivationFunction.get() == 1):
+        activationFunction = "sigmoid"
+    else:
+        activationFunction = "tanh"
 
     print("hidden layers: " + str(L))
     print("neurons: " + str(neurons))
@@ -179,15 +234,16 @@ def startPrediction():
     messagebox.showinfo("Accuracy for Training", "Accuracy: " + str(accuracy(y_train, predict_train)))
     messagebox.showinfo("Accuracy for Testing", "Accuracy: " + str(accuracy(y_test, predict_test)))
 
-#Traning
-    y_t = np.apply_along_axis(arg_max_value_func, 1, y_train)
-    p_t = np.apply_along_axis(arg_max_value_func, 1, predict_train)
-    ConfusionMatrix(y_t, p_t, 'Adelie', 'Chinstrap', 'Gentoo')
+    if(InputDatasetChoice.get()==1):
+    #Traning
+        y_t = np.apply_along_axis(arg_max_value_func, 1, y_train)
+        p_t = np.apply_along_axis(arg_max_value_func, 1, predict_train)
+        ConfusionMatrix(y_t, p_t, 'Adelie', 'Chinstrap', 'Gentoo')
 
-#Test
-    y_t = np.apply_along_axis(arg_max_value_func, 1, y_test)
-    p_t = np.apply_along_axis(arg_max_value_func, 1, predict_test)
-    ConfusionMatrix(y_t, p_t, 'Adelie', 'Chinstrap', 'Gentoo')
+    #Test
+        y_t = np.apply_along_axis(arg_max_value_func, 1, y_test)
+        p_t = np.apply_along_axis(arg_max_value_func, 1, predict_test)
+        ConfusionMatrix(y_t, p_t, 'Adelie', 'Chinstrap', 'Gentoo')
 
 #start Button
 button=Button(form,text="Start",width=10,command=startPrediction)
@@ -197,9 +253,14 @@ button.pack()
 form.mainloop()
 
 '''
+Mandatory
 3 - [5,4,3] - True  - "sigmoid" - 0.1 - 500   --> (98)
 3 - [5,4,3] - False - "sigmoid" - 0.1 - 500   --> (100)
 
 3 , [5,4,3] , True , "tanh" , 0.01 , 500 --> (98)
 3 , [5,4,3] , False , "tanh" , 0.01 , 500 --> (100)
+'''
+'''
+Bonus
+3 - [784,16,10] - True - "tanh" - 0.1 - 100   --> (96)
 '''
